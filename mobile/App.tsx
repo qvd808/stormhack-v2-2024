@@ -2,7 +2,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import HomeScreen from './components/HomeScreen';
 import UploadImage from './components/UploadImage';
