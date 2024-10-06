@@ -24,7 +24,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+
     <View className="flex-1 p-4">
       <Text className="text-2xl mb-5">Expenses</Text>
       <View className="w-full">
@@ -37,10 +37,11 @@ export default function HomeScreen() {
           data={historyExpenses}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 100, }}
+          
         />
       </View>
     </View>
-    </ScrollView>
+
   );
 }

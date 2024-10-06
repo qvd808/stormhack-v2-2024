@@ -1,7 +1,16 @@
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
-import { Button, SafeAreaView, Text, View } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import {
+  Button,
+  SafeAreaView,
+  Text,
+  View,
+  FlatList,
+  Alert,
+  TextInput,
+} from "react-native";
 import { styled } from "nativewind";
 import { getData, storeData } from "./AsyncMethod";
 
@@ -16,8 +25,9 @@ const apiUrl = process.env["API_URL"];
 // Camera Screen - Placeholder for camera functionality
 export default function UploadImage() {
   const [image, setImage] = useState(null);
-  const [extractedText, setExtractedText] = useState("");
-  const [storeDataHistory, setStoreDataHistory] = useState([]);
+  const [tempData, setTempData] = useState([]);
+  const [historyExpenses, setHistoryExpenses] = useState([]);
+  const [isValid, setIsValid] = useState(true);
 
   const validCategories = [
     "Dairy & Eggs",
@@ -236,18 +246,7 @@ export default function UploadImage() {
                 ? loadedCategories.grocery_category_analysis[index].category
                 : "Unknown";
           });
-
-          await getData(setStoreDataHistory);
-          const newHistoryItems = chatData.items.map((item) => ({
-            id: "id-" + Math.random().toString(36),
-            date: item.date,
-            category: item.category,
-            amount: item.price,
-            name: item.name,
-          }));
-
-          const updatedHistory = [...storeDataHistory, ...newHistoryItems];
-          storeData(updatedHistory);
+          setTempData(chatData.items);
         }
       }
     }
@@ -286,40 +285,119 @@ export default function UploadImage() {
                 : "Unknown";
           });
 
-          await getData(setStoreDataHistory);
-          const newHistoryItems = chatData.items.map((item) => ({
-            id: "id-" + Math.random().toString(36),
-            date: item.date,
-            category: item.category,
-            amount: item.price,
-            name: item.name,
-          }));
-
-          const updatedHistory = [...storeDataHistory, ...newHistoryItems];
-          storeData(updatedHistory);
+          setTempData(chatData.items);
         }
       }
     }
   };
 
+  // Save parsed data to async storage
+  const handleDone = async () => {
+    try {
+      const processedData = tempData.map((item) => ({
+        id: "id-" + Math.random().toString(36),
+        date: item.date,
+        category: item.category,
+        amount: item.price,
+        name: item.name,
+      }));
+
+      await getData(setHistoryExpenses);
+      processedData.push(...historyExpenses);
+
+      await storeData(processedData);
+      setTempData([]);
+    } catch (error) {
+      console.error("Failed to save data:", error);
+      Alert.alert("Error", "Failed to save data");
+    }
+  };
+
+  // Render the table of grocery items
+  const renderItem = ({ item, index }) => (
+    <View className="border p-4 mb-2">
+      <TextInput
+        style={{ borderBottomWidth: 1, marginBottom: 8 }}
+        placeholder="Enter name"
+        defaultValue={item.name} // You can set the default value to the item's name
+        onChangeText={(text) => {
+          const updatedData = [...tempData]; // Create a copy of tempData
+          updatedData[index].name = text; // Update the specific item's name
+          setTempData(updatedData); // Set the updated data        
+        }}
+      />
+      <TextInput
+        style={{ borderBottomWidth: 1, marginBottom: 8 }}
+        placeholder="Enter price"
+        defaultValue={item.price.toString()} // Convert price to string
+        onChangeText={(text) => {
+          const price = parseFloat(text);
+          const updatedData = [...tempData]; // Create a copy of tempData
+  
+          if (!isNaN(price) && price > 0) {
+            updatedData[index].price = price; // Update the specific item's price
+            setIsValid(true);
+          } else {
+            setIsValid(false);
+          }
+          setTempData(updatedData); // Set the updated data
+        }}
+        keyboardType="numeric" // Set keyboard type to numeric for price
+      />
+      <Picker
+        selectedValue={item.category}
+        style={{ height: 50, marginBottom: 8 }}
+        onValueChange={(itemValue) => {
+          const updatedData = [...tempData]; // Create a copy of tempData
+          updatedData[index].category = itemValue; // Update the specific item's category
+          setTempData(updatedData); // Set the updated data
+        }}
+      >
+        <Picker.Item label="Select a category" value="" />
+        {validCategories.map((category, index) => (
+          <Picker.Item key={index} label={category} value={category}/>
+        ))}
+      </Picker>
+    </View>
+  );
+
   return (
     <StyledSafeAreaView className="flex-1 justify-center items-center p-4">
-      <View className="w-full mb-4">
-        <StyledButton
-          title="Pick an image from gallery"
-          onPress={pickImageGallery}
-        />
-      </View>
-      <View className="w-full mb-4">
-        <StyledButton
-          title="Pick an image from camera"
-          onPress={pickImageCamera}
-        />
-      </View>
-      <StyledText className="text-base text-center mt-4">
-        {extractedText}
-      </StyledText>
-      <StatusBar style="auto" />
+      {tempData.length === 0 ? (
+        <>
+          {/* Remove the nested SafeAreaView */}
+          <View className="w-full mb-4">
+            <StyledButton
+              title="Pick an image from gallery"
+              onPress={pickImageGallery}
+            />
+          </View>
+          <View className="w-full mb-4">
+            <StyledButton
+              title="Pick an image from camera"
+              onPress={pickImageCamera}
+            />
+          </View>
+          <StatusBar style="auto" />
+        </>
+      ) : (
+        <>
+          <FlatList
+            data={tempData}
+            keyExtractor={(item) => item.name + item.price}
+            renderItem={renderItem}
+            contentContainerStyle={{ flexGrow: 1, padding: 10 }}
+            className="w-full"
+          />
+          <View className="w-full mt-4">
+            <StyledButton
+              title="Done"
+              onPress={handleDone}
+              disabled={!isValid}
+            />
+          </View>
+        </>
+      )}
     </StyledSafeAreaView>
   );
 }

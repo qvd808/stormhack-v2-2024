@@ -5,7 +5,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import HomeScreen from './components/HomeScreen';
 import UploadImage from './components/UploadImage';
 import { styled } from 'nativewind';
-import { ScrollView } from 'react-native';
 
 // Use styled components for customization
 const Tab = createBottomTabNavigator();
@@ -17,7 +16,6 @@ export default function App() {
 
       <NavigationContainer>
         <Tab.Navigator
-          
           screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size, focused }) => {
               let iconName;
