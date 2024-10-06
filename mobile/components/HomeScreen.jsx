@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-// Home Screen - Shows the expense table
+import { View, Text, FlatList } from 'react-native';
 
 // Sample expense data
 const expenses = [
@@ -12,60 +10,29 @@ const expenses = [
 ];
 
 export default function HomeScreen() {
+  const renderItem = ({ item }) => (
+    <View className="flex-row justify-between p-3 border-b border-gray-300">
+      <Text className="text-lg flex-1">{item.date}</Text>
+      <Text className="text-lg flex-1">{item.category}</Text>
+      <Text className="text-lg flex-1">{item.amount}</Text>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Expenses</Text>
-      <FlatList
-        data={expenses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text style={styles.expenseText}>{item.date}</Text>
-            <Text style={styles.expenseText}>{item.category}</Text>
-            <Text style={styles.expenseText}>{item.amount}</Text>
-          </View>
-        )}
-        ListHeaderComponent={
-          <View style={styles.tableHeader}>
-            <Text style={styles.tableHeaderText}>Date</Text>
-            <Text style={styles.tableHeaderText}>Category</Text>
-            <Text style={styles.tableHeaderText}>Amount</Text>
-          </View>
-        }
-      />
+    <View className="flex-1 p-4">
+      <Text className="text-2xl mb-5">Expenses</Text>
+      <View className="w-full">
+        <View className="flex-row justify-between p-3 bg-gray-200">
+          <Text className="font-bold text-sm flex-1">Date</Text>
+          <Text className="font-bold text-sm flex-1">Category</Text>
+          <Text className="font-bold text-sm flex-1">Amount</Text>
+        </View>
+        <FlatList
+          data={expenses}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+        />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 10,
-  },
-  header: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  expenseItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-  },
-  expenseText: {
-    fontSize: 16,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: '#f4f4f4',
-  },
-  tableHeaderText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-});
