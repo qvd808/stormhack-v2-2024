@@ -17,12 +17,14 @@ import { getData, storeData } from "./AsyncMethod";
 const StyledSafeAreaView = styled(SafeAreaView);
 const StyledText = styled(Text);
 const StyledButton = styled(Button);
+const StyledTextInput = styled(TextInput);
+const StyledView = styled(View);
+const StyledPicker = styled(Picker);
 
 const imageApiKey = process.env["IMAGE_API_KEY"];
 const lmlApiKey = process.env["LLM_API_KEY"];
 const apiUrl = process.env["API_URL"];
 
-// Camera Screen - Placeholder for camera functionality
 export default function UploadImage() {
   const [image, setImage] = useState(null);
   const [tempData, setTempData] = useState([]);
@@ -40,6 +42,7 @@ export default function UploadImage() {
     "Drinks",
     "Fruits & Vegs",
   ];
+
 
   const processImage = async (base64Image) => {
     const requestBody = {
@@ -233,6 +236,7 @@ export default function UploadImage() {
           const names = chatData.items.map((item) => item.name);
 
           // Use the new retry function
+
           const loadedCategories = await getCategoriesWithRetry(names);
 
           const currentDate = new Date();
@@ -314,91 +318,78 @@ export default function UploadImage() {
   };
 
  // Render the table of grocery items
-const renderItem = ({ item, index }) => (
-  <View className="border rounded-lg p-4 mb-4 shadow-md bg-white">
-    <TextInput
-      style={{
-        borderBottomWidth: 2,
-        borderColor: '#ccc',
-        marginBottom: 10,
-        paddingVertical: 5,
-        fontSize: 16,
-      }}
-      placeholder="Enter name"
-      defaultValue={item.name} // You can set the default value to the item's name
-      onChangeText={(text) => {
-        const updatedData = [...tempData]; // Create a copy of tempData
-        updatedData[index].name = text; // Update the specific item's name
-        setTempData(updatedData); // Set the updated data        
-      }}
-    />
-    <TextInput
-      style={{
-        borderBottomWidth: 2,
-        borderColor: '#ccc',
-        marginBottom: 10,
-        paddingVertical: 5,
-        fontSize: 16,
-      }}
-      placeholder="Enter price"
-      defaultValue={item.price.toString()} // Convert price to string
-      onChangeText={(text) => {
-        const price = parseFloat(text);
-        const updatedData = [...tempData]; // Create a copy of tempData
+  const renderItem = ({ item, index }) => (
+    <StyledView className="bg-gray-700 rounded-xl p-4 mb-4">
+      <StyledTextInput
+        className="bg-gray-600 text-gray-100 rounded-lg p-3 mb-3 text-base"
+        placeholder="Enter name"
+        placeholderTextColor="#9CA3AF"
+        defaultValue={item.name}
+        onChangeText={(text) => {
+          const updatedData = [...tempData];
+          updatedData[index].name = text;
+          setTempData(updatedData);
+        }}
+      />
+      <StyledTextInput
+        className="bg-gray-600 text-gray-100 rounded-lg p-3 mb-3 text-base"
+        placeholder="Enter price"
+        placeholderTextColor="#9CA3AF"
+        defaultValue={item.price.toString()}
+        onChangeText={(text) => {
+          const price = parseFloat(text);
+          const updatedData = [...tempData];
 
-        if (!isNaN(price) && price > 0) {
-          updatedData[index].price = price; // Update the specific item's price
-          setIsValid(true);
-        } else {
-          setIsValid(false);
-        }
-        setTempData(updatedData); // Set the updated data
-      }}
-      keyboardType="numeric" // Set keyboard type to numeric for price
-    />
-    <Picker
-      selectedValue={item.category}
-      style={{
-        height: 50,
-        marginBottom: 10,
-        backgroundColor: '#f9f9f9',
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-      }}
-      onValueChange={(itemValue) => {
-        const updatedData = [...tempData]; // Create a copy of tempData
-        updatedData[index].category = itemValue; // Update the specific item's category
-        setTempData(updatedData); // Set the updated data
-      }}
-    >
-      <Picker.Item label="Select a category" value="" />
-      {validCategories.map((category, index) => (
-        <Picker.Item key={index} label={category} value={category} />
-      ))}
-    </Picker>
-  </View>
-);
-
+          if (!isNaN(price) && price > 0) {
+            updatedData[index].price = price;
+            setIsValid(true);
+          } else {
+            setIsValid(false);
+          }
+          setTempData(updatedData);
+        }}
+        keyboardType="numeric"
+      />
+      <StyledPicker
+        selectedValue={item.category}
+        className="bg-gray-600 text-gray-100 rounded-lg mb-3"
+        onValueChange={(itemValue) => {
+          const updatedData = [...tempData];
+          updatedData[index].category = itemValue;
+          setTempData(updatedData);
+        }}
+      >
+        <Picker.Item label="Select a category" value="" className="text-red-500" />
+        {validCategories.map((category, index) => (
+          <Picker.Item key={index} label={category} value={category} color="#FFFFF" />
+        ))}
+      </StyledPicker>
+    </StyledView>
+  );
 
   return (
-    <StyledSafeAreaView className="flex-1 justify-center items-center p-4">
+    <StyledSafeAreaView className="flex-1 bg-gray-800 p-4">
       {tempData.length === 0 ? (
         <>
-          {/* Remove the nested SafeAreaView */}
-          <View className="w-full mb-4">
+          <StyledView className="mb-4">
             <StyledButton
               title="Pick an image from gallery"
+              className="bg-blue-500 rounded-lg p-4 items-center"
               onPress={pickImageGallery}
-            />
-          </View>
-          <View className="w-full mb-4">
+            >
+              <StyledText className="text-gray-100 text-base font-bold">Pick an image from gallery</StyledText>
+            </StyledButton>
+          </StyledView>
+          <StyledView className="mb-4">
             <StyledButton
               title="Pick an image from camera"
+              className="bg-blue-500 rounded-lg p-4 items-center"
               onPress={pickImageCamera}
-            />
-          </View>
-          <StatusBar style="auto" />
+            >
+              <StyledText className="text-gray-100 text-base font-bold">Pick an image from camera</StyledText>
+            </StyledButton>
+          </StyledView>
+          <StatusBar style="light" />
         </>
       ) : (
         <>
@@ -406,17 +397,18 @@ const renderItem = ({ item, index }) => (
             data={tempData}
             keyExtractor={(item) => item.name + item.price}
             renderItem={renderItem}
-            contentContainerStyle={{ flexGrow: 1, padding: 10 }}
-            className="w-full"
+            contentContainerStyle="flex-grow pb-4"
           />
-          <View className="w-full mt-6 bg-transparent ">
+          <StyledView className="mb-4">
             <StyledButton
               title="Done"
+              className={`rounded-lg p-4 items-center ${isValid ? 'bg-blue-500' : 'bg-gray-500'}`}
               onPress={handleDone}
               disabled={!isValid}
-              
-            />
-          </View>
+            >
+              <StyledText className="text-gray-100 text-base font-bold">Done</StyledText>
+            </StyledButton>
+          </StyledView>
         </>
       )}
     </StyledSafeAreaView>
