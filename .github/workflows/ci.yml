@@ -1,0 +1,40 @@
+name: Build and Deploy Expo App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_submit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      working-directory: ./mobile
+      run: npm install
+
+    - name: Install EAS CLI
+      run: npm install -g eas-cli
+
+    - name: Log in to Expo
+      run: npx eas-cli login --token ${{ secrets.EXPO_TOKEN }}
+
+    - name: Configure EAS
+      working-directory: ./mobile
+      run: npx eas-cli build:configure
+
+    - name: Build Android app
+      working-directory: ./mobile
+      run: npx eas-cli build --platform android --non-interactive
+
+    - name: Submit Android app to Google Play Store
+      working-directory: ./mobile
+      run: npx eas-cli submit --platform android --latest
