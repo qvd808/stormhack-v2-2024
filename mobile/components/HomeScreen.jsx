@@ -1,15 +1,20 @@
 import React from 'react';
 import { View, Text, FlatList } from 'react-native';
-
-// Sample expense data
-const expenses = [
-  { id: '1', date: '2024-09-15', category: 'Groceries', amount: '$50.00' },
-  { id: '2', date: '2024-09-18', category: 'Transport', amount: '$15.00' },
-  { id: '3', date: '2024-09-19', category: 'Dining Out', amount: '$30.00' },
-  { id: '4', date: '2024-09-20', category: 'Entertainment', amount: '$25.00' },
-];
+import { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { getData } from './AsyncMethod';
 
 export default function HomeScreen() {
+
+  const [historyExpenses, setHistoryExpenses] = useState([]);
+
+  // Use useFocusEffect to refresh data whenever the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      getData(setHistoryExpenses);
+    }, [])
+  );
+
   const renderItem = ({ item }) => (
     <View className="flex-row justify-between p-3 border-b border-gray-300">
       <Text className="text-lg flex-1">{item.date}</Text>
@@ -28,7 +33,7 @@ export default function HomeScreen() {
           <Text className="font-bold text-sm flex-1">Amount</Text>
         </View>
         <FlatList
-          data={expenses}
+          data={historyExpenses}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
         />

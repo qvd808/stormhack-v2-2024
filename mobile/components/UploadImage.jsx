@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import { Button, SafeAreaView, Text, View } from "react-native";
 import { styled } from "nativewind";
+import { getData, storeData } from "./AsyncMethod";
 
 const StyledSafeAreaView = styled(SafeAreaView);
 const StyledText = styled(Text);
@@ -16,17 +17,19 @@ const apiUrl = process.env["API_URL"];
 export default function UploadImage() {
   const [image, setImage] = useState(null);
   const [extractedText, setExtractedText] = useState("");
+  const [storeDataHistory, setStoreDataHistory] = useState([]);
 
-  //   const loadImageAsBase64 = async (uri) => {
-  //     try {
-  //       const imageBase64 = await RNFS.readFile(uri, "base64");
-  //       return imageBase64;
-  //     } catch (error) {
-  //       console.error("Error loading image:", error);
-  //       Alert.alert("Error", "Failed to load image");
-  //       return null;
-  //     }
-  //   };
+  const validCategories = [
+    "Dairy & Eggs",
+    "Snacks & Candy",
+    "Baked & Bakery",
+    "Frozen Food",
+    "Meat",
+    "Seafood",
+    "Pantry",
+    "Drinks",
+    "Fruits & Vegs",
+  ];
 
   const processImage = async (base64Image) => {
     const requestBody = {
@@ -80,7 +83,7 @@ export default function UploadImage() {
                 "price": ""
               }
             ],
-            "total": ""
+            "total": "",
           }.
           Remove all other text, and only keep the JSON object:\n${result}
         `,
@@ -131,6 +134,7 @@ export default function UploadImage() {
           Pantry, Drinks, Fruits & Vegs.
           You will be given an array of item names, and you must return an array of JSON objects following the schema below.
           Respond in JSON format.
+          Must provided the category, and must be from the list of categories above.
           The JSON schema should include:
           {
           "grocery_category_analysis": [
@@ -138,7 +142,7 @@ export default function UploadImage() {
           "category": "string (Dairy & Eggs, Snacks & Candy, Baked & Bakery, Frozen Food, Meat, Seafood, Pantry, Drinks, Fruits & Vegs)",
           "confidence_score": "number (0-1)"
           }
-          ]
+          ],
           }`,
         },
         {
@@ -171,11 +175,36 @@ export default function UploadImage() {
       return {
         items: [{ name: "Error", price: "Error" }],
         total: "Error",
-      }
+      };
     }
   };
 
-  // Function to pick an image from the gallery
+  const getCategoriesWithRetry = async (names, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const categories = await callLanguageModelAPICategorize(names);
+      if (!categories) continue;
+
+      const loadedCategories = JSON.parse(categories);
+      const categoryAnalysis = loadedCategories.grocery_category_analysis;
+
+      // Check if we have enough categories
+      if (categoryAnalysis.length >= names.length / 2) {
+        return loadedCategories;
+      }
+
+      console.log(`Attempt ${attempt}: Not enough categories, retrying...`);
+    }
+
+    // If we've exhausted all retries, return a default category for each item
+    return {
+      grocery_category_analysis: names.map(() => ({
+        category: "Unknown",
+        confidence_score: 0,
+      })),
+    };
+  };
+
+  // Modify the part where you process the chat response
   const pickImageGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -190,29 +219,35 @@ export default function UploadImage() {
       if (process_image) {
         const chatResponse = await callLanguageModelAPI(process_image);
         if (chatResponse) {
-          const names = JSON.parse(chatResponse).items.map((item) => item.name);
-          const categories = await callLanguageModelAPICategorize(names);
-            const chatData = JSON.parse(chatResponse);
-          console.log(names);
-          if (categories) {
-            const loadedCategories = JSON.parse(categories);
-            const length_fake = await JSON.parse(chatResponse).items.length;
-            console.log(length_fake)
-            // console.log(chatResponse.items.length)
-            for (let i = 0; i < length_fake; i++) {
-              if (i < loadedCategories.grocery_category_analysis.length) {
-                chatData.items[i].category =
-                  loadedCategories.grocery_category_analysis[i].category;
-              } else {
-                chatData.items[i].category = null; // Set to null if out of range
-              }
-            }
-          } else {
-            chatData.items.forEach((item) => {
-              item.category = null; // Set to null
-            });
-          }
-          console.log(chatData);
+          const chatData = JSON.parse(chatResponse);
+          const names = chatData.items.map((item) => item.name);
+
+          // Use the new retry function
+          const loadedCategories = await getCategoriesWithRetry(names);
+
+          const currentDate = new Date();
+          const formattedDate = currentDate.toISOString().split("T")[0];
+
+          chatData.items.forEach((item, index) => {
+            item.date = formattedDate;
+            item.price = String(item.price).replace(/[^0-9.]/g, "");
+            item.category =
+              index < loadedCategories.grocery_category_analysis.length
+                ? loadedCategories.grocery_category_analysis[index].category
+                : "Unknown";
+          });
+
+          await getData(setStoreDataHistory);
+          const newHistoryItems = chatData.items.map((item) => ({
+            id: "id-" + Math.random().toString(36),
+            date: item.date,
+            category: item.category,
+            amount: item.price,
+            name: item.name,
+          }));
+
+          const updatedHistory = [...storeDataHistory, ...newHistoryItems];
+          storeData(updatedHistory);
         }
       }
     }
@@ -228,8 +263,42 @@ export default function UploadImage() {
     });
 
     if (!result.canceled) {
-      performOCR(result.assets[0]);
       setImage(result.assets[0].uri);
+      const process_image = await processImage(result.assets[0].base64);
+      if (process_image) {
+        const chatResponse = await callLanguageModelAPI(process_image);
+        if (chatResponse) {
+          const chatData = JSON.parse(chatResponse);
+          const names = chatData.items.map((item) => item.name);
+
+          // Use the new retry function
+          const loadedCategories = await getCategoriesWithRetry(names);
+
+          const currentDate = new Date();
+          const formattedDate = currentDate.toISOString().split("T")[0];
+
+          chatData.items.forEach((item, index) => {
+            item.date = formattedDate;
+            item.price = String(item.price).replace(/[^0-9.]/g, "");
+            item.category =
+              index < loadedCategories.grocery_category_analysis.length
+                ? loadedCategories.grocery_category_analysis[index].category
+                : "Unknown";
+          });
+
+          await getData(setStoreDataHistory);
+          const newHistoryItems = chatData.items.map((item) => ({
+            id: "id-" + Math.random().toString(36),
+            date: item.date,
+            category: item.category,
+            amount: item.price,
+            name: item.name,
+          }));
+
+          const updatedHistory = [...storeDataHistory, ...newHistoryItems];
+          storeData(updatedHistory);
+        }
+      }
     }
   };
 
