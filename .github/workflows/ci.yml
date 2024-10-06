@@ -24,17 +24,14 @@ jobs:
     - name: Install EAS CLI
       run: npm install -g eas-cli
 
-    - name: Log in to Expo
-      run: npx eas-cli login --token ${{ secrets.EXPO_TOKEN }}
-
     - name: Configure EAS
       working-directory: ./mobile
       run: npx eas-cli build:configure
 
     - name: Build Android app
       working-directory: ./mobile
-      run: npx eas-cli build --platform android --non-interactive
+      run: npx eas-cli build --platform android --non-interactive --token ${{ secrets.EXPO_TOKEN }}
 
     - name: Submit Android app to Google Play Store
       working-directory: ./mobile
-      run: npx eas-cli submit --platform android --latest
+      run: npx eas-cli submit --platform android --latest --token ${{ secrets.EXPO_TOKEN }}
