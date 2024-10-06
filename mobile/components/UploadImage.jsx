@@ -313,53 +313,73 @@ export default function UploadImage() {
     }
   };
 
-  // Render the table of grocery items
-  const renderItem = ({ item, index }) => (
-    <View className="border p-4 mb-2">
-      <TextInput
-        style={{ borderBottomWidth: 1, marginBottom: 8 }}
-        placeholder="Enter name"
-        defaultValue={item.name} // You can set the default value to the item's name
-        onChangeText={(text) => {
-          const updatedData = [...tempData]; // Create a copy of tempData
-          updatedData[index].name = text; // Update the specific item's name
-          setTempData(updatedData); // Set the updated data        
-        }}
-      />
-      <TextInput
-        style={{ borderBottomWidth: 1, marginBottom: 8 }}
-        placeholder="Enter price"
-        defaultValue={item.price.toString()} // Convert price to string
-        onChangeText={(text) => {
-          const price = parseFloat(text);
-          const updatedData = [...tempData]; // Create a copy of tempData
-  
-          if (!isNaN(price) && price > 0) {
-            updatedData[index].price = price; // Update the specific item's price
-            setIsValid(true);
-          } else {
-            setIsValid(false);
-          }
-          setTempData(updatedData); // Set the updated data
-        }}
-        keyboardType="numeric" // Set keyboard type to numeric for price
-      />
-      <Picker
-        selectedValue={item.category}
-        style={{ height: 50, marginBottom: 8 }}
-        onValueChange={(itemValue) => {
-          const updatedData = [...tempData]; // Create a copy of tempData
-          updatedData[index].category = itemValue; // Update the specific item's category
-          setTempData(updatedData); // Set the updated data
-        }}
-      >
-        <Picker.Item label="Select a category" value="" />
-        {validCategories.map((category, index) => (
-          <Picker.Item key={index} label={category} value={category}/>
-        ))}
-      </Picker>
-    </View>
-  );
+ // Render the table of grocery items
+const renderItem = ({ item, index }) => (
+  <View className="border rounded-lg p-4 mb-4 shadow-md bg-white">
+    <TextInput
+      style={{
+        borderBottomWidth: 2,
+        borderColor: '#ccc',
+        marginBottom: 10,
+        paddingVertical: 5,
+        fontSize: 16,
+      }}
+      placeholder="Enter name"
+      defaultValue={item.name} // You can set the default value to the item's name
+      onChangeText={(text) => {
+        const updatedData = [...tempData]; // Create a copy of tempData
+        updatedData[index].name = text; // Update the specific item's name
+        setTempData(updatedData); // Set the updated data        
+      }}
+    />
+    <TextInput
+      style={{
+        borderBottomWidth: 2,
+        borderColor: '#ccc',
+        marginBottom: 10,
+        paddingVertical: 5,
+        fontSize: 16,
+      }}
+      placeholder="Enter price"
+      defaultValue={item.price.toString()} // Convert price to string
+      onChangeText={(text) => {
+        const price = parseFloat(text);
+        const updatedData = [...tempData]; // Create a copy of tempData
+
+        if (!isNaN(price) && price > 0) {
+          updatedData[index].price = price; // Update the specific item's price
+          setIsValid(true);
+        } else {
+          setIsValid(false);
+        }
+        setTempData(updatedData); // Set the updated data
+      }}
+      keyboardType="numeric" // Set keyboard type to numeric for price
+    />
+    <Picker
+      selectedValue={item.category}
+      style={{
+        height: 50,
+        marginBottom: 10,
+        backgroundColor: '#f9f9f9',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+      }}
+      onValueChange={(itemValue) => {
+        const updatedData = [...tempData]; // Create a copy of tempData
+        updatedData[index].category = itemValue; // Update the specific item's category
+        setTempData(updatedData); // Set the updated data
+      }}
+    >
+      <Picker.Item label="Select a category" value="" />
+      {validCategories.map((category, index) => (
+        <Picker.Item key={index} label={category} value={category} />
+      ))}
+    </Picker>
+  </View>
+);
+
 
   return (
     <StyledSafeAreaView className="flex-1 justify-center items-center p-4">
@@ -389,11 +409,12 @@ export default function UploadImage() {
             contentContainerStyle={{ flexGrow: 1, padding: 10 }}
             className="w-full"
           />
-          <View className="w-full mt-4">
+          <View className="w-full mt-6 bg-transparent ">
             <StyledButton
               title="Done"
               onPress={handleDone}
               disabled={!isValid}
+              
             />
           </View>
         </>

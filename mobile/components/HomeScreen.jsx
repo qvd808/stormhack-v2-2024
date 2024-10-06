@@ -1,97 +1,177 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { getData } from './AsyncMethod';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PieChart } from 'react-native-gifted-charts';
+import { styled } from 'nativewind';
+import { useFocusEffect } from "@react-navigation/native";
+import { getData } from "./AsyncMethod";
 
-// Define an enum-like object to map categories to colors
+const StyledView = styled(View)
+const StyledText = styled(Text)
+const StyledScrollView = styled(ScrollView)
+const StyledSafeAreaView = styled(SafeAreaView)
+
+// Category colors mapping remains the same
 const categoryColors = {
-  'Fruits & Vegs': '#FFB6C1',
-  'Meat': '#FF6347',
-  'Seafood': '#1E90FF',
-  'Dairy': '#FFD700',
-  'Snacks': '#7CFC00',
+  "Dairy & Eggs": "#FFD700",
+  "Snacks & Candy": "#FF69B4",
+  "Baked & Bakery": "#F5DEB3",
+  "Frozen Food": "#ADD8E6",
+  "Meat": "#FF6347",
+  "Seafood": "#1E90FF",
+  "Pantry": "#8FBC8F",
+  "Drinks": "#FF4500",
+  "Fruits & Vegs": "#FFB6C1",
 };
 
-// Function to sum amounts by category and convert to the required format with percentages and colors
+// getCategoryIcon function remains the same
+const getCategoryIcon = (category) => {
+  switch (category.toLowerCase()) {
+    case "dairy & eggs": return "egg";
+    case "snacks & candy": return "candy-cane";
+    case "baked & bakery": return "bread-slice";
+    case "frozen food": return "snowflake";
+    case "meat": return "food-steak";
+    case "seafood": return "fish";
+    case "pantry": return "cupboard-outline";
+    case "drinks": return "cup";
+    case "fruits & vegs": return "fruit-grapes";
+    default: return "shopping";
+  }
+};
+
+// SummaryCard component remains the same
+const SummaryCard = ({ category, amount }) => (
+  <StyledView className="bg-gray-800 rounded-xl p-4 mb-2 flex-row justify-between items-center">
+    <StyledView className="flex-row items-center">
+      <Icon name={getCategoryIcon(category)} size={24} color="#9CA3AF" />
+      <StyledText className="text-gray-300 text-lg ml-2">{category}</StyledText>
+    </StyledView>
+    <StyledText className="text-white text-xl font-bold">${amount.toFixed(2)}</StyledText>
+  </StyledView>
+);
+
+// sumAndConvertToPercentage function remains the same
 const sumAndConvertToPercentage = (data) => {
   const categorySums = {};
 
-  // Calculate the sum for each category
-  data.forEach(item => {
+  data.forEach((item) => {
     const category = item.category;
-    const amount = parseFloat(item.amount); // Convert amount to a float
-
-    // Initialize category sum if it doesn't exist
-    if (!categorySums[category]) {
-      categorySums[category] = 0;
+    const amount = parseFloat(item.amount);
+    if (!isNaN(amount) && amount > 0) { // Ensure the amount is a valid number and greater than 0
+      if (!categorySums[category]) {
+        categorySums[category] = 0;
+      }
+      categorySums[category] += amount;
+    } else {
+      console.error(`Invalid amount for item: ${JSON.stringify(item)}`);
     }
-    // Add the amount to the corresponding category sum
-    categorySums[category] += amount;
   });
 
-  // Calculate total sum of all categories
+  console.log(data)
+
   const totalSum = Object.values(categorySums).reduce((acc, curr) => acc + curr, 0);
 
-  // Convert the category sums to the format required by the PieChart (with percentage and color)
-  const result = Object.entries(categorySums).map(([category, sum]) => {
-    const percentage = ((sum / totalSum) * 100).toFixed(2); // Calculate percentage and format to 2 decimal places
-    return {
-      text: category, // Category name
-      value: parseFloat(percentage), // Percentage
-      color: categoryColors[category] || '#CCCCCC', // Use the color from the enum, or a default color if not found
-    };
-  });
-
-  return result;
+  return Object.entries(categorySums).map(([category, sum]) => ({
+    text: category,
+    value: parseFloat(((sum / totalSum) * 100).toFixed(2)),
+    color: categoryColors[category] || "#CCCCCC",
+    amount: sum
+  }));
 };
 
-export default function HomeScreen() {
+// ExpensePieChart component remains the same
+const ExpensePieChart = ({ data }) => {
+  const formattedData = sumAndConvertToPercentage(data);
+  
+  const totalAmount = data.reduce((sum, item) => {
+    const amount = parseFloat(item.amount);
+    return !isNaN(amount) && amount > 0 ? sum + amount : sum;
+  }, 0);
+
+  console.log(data);
+  console.log(`Total Amount: ${totalAmount}`);
+
+  const renderLegendItem = ({ text, value, color }) => (
+    <StyledView className="flex-row items-center mb-2" key={text}>
+      <StyledView
+        style={{ backgroundColor: color }}
+        className="w-4 h-4 mr-2 rounded-full"
+      />
+      <StyledText className="text-gray-300">{text}: {value}%</StyledText>
+    </StyledView>
+  );
+
+  return (
+    <StyledView className="bg-gray-800 rounded-xl p-4 mb-4">
+      <StyledText className="text-gray-300 text-lg mb-4">Expense Breakdown</StyledText>
+      <StyledView className="items-center">
+        <PieChart
+          data={formattedData.map(item => ({
+            value: item.value,
+            color: item.color,
+            gradientCenterColor: item.color,
+          }))}
+          donut
+          radius={80}
+          innerRadius={60}
+          centerLabelComponent={() => (
+            <StyledView className="items-center justify-center">
+              <StyledText className="text-gray-400 text-xl font-bold">${totalAmount.toFixed(2)}</StyledText>
+              <StyledText className="text-gray-400 text-sm">Total</StyledText>
+            </StyledView>
+          )}
+        />
+      </StyledView>
+      <StyledView className="mt-4">
+        {formattedData.map(renderLegendItem)}
+      </StyledView>
+    </StyledView>
+  );
+};
+
+const TwoWeekSummary = ({ data }) => {
+  const twoWeeksAgo = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+  
+  const recentExpenses = data.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    return expenseDate >= twoWeeksAgo;
+  });
+
+  const categorySums = sumAndConvertToPercentage(recentExpenses);
+  
+  return (
+    <StyledView className="mb-4">
+      <StyledText className="text-white text-xl mb-3">Last Month Summary</StyledText>
+      {categorySums.map(item => (
+        <SummaryCard key={item.text} category={item.text} amount={item.amount} />
+      ))}
+    </StyledView>
+  );
+};
+
+const HomeScreen = () => {
   const [historyExpenses, setHistoryExpenses] = useState([]);
 
-  // Use useFocusEffect to refresh data whenever the screen is focused
   useFocusEffect(
     React.useCallback(() => {
       getData(setHistoryExpenses);
     }, [])
   );
 
-  // Get the category sums and percentages in the required format
-  const formattedData = sumAndConvertToPercentage(historyExpenses);
-
-  // Render Legend Item
-  const renderLegendItem = ({ text, value, color }) => (
-    <View className="flex-row items-center mb-2" key={text}>
-      <View style={{ backgroundColor: color }} className="w-4 h-4 mr-2 rounded-full" />
-      <Text className="text-lg">{text}: {value}%</Text>
-    </View>
-  );
-
   return (
-    <ScrollView
-  className="flex flex-col content-center p-4"
-  
->
-      <Text className="text-2xl mb-5">Expenses</Text>
-      <View className="flex-col items-center content-center">
-      <PieChart
-        data={formattedData}
-        width={400} // Set the width of the pie chart
-        height={400} // Set the height of the pie chart
-        chartConfig={{
-          paddingLeft: 20,
-          backgroundColor: '#fff',
-          backgroundGradientFrom: '#fff',
-          backgroundGradientTo: '#fff',
-          decimalPlaces: 2, // Optional
-        }}
-      />
-
-      {/* Legend in flex column layout */}
-      <View className="mt-4">
-        {formattedData.map(item => renderLegendItem(item))}
-      </View>
-    </View>
-    </ScrollView>
+    <StyledSafeAreaView className="flex-1 bg-gray-900">
+      <StyledScrollView className="flex-1">
+        <StyledView className="p-4">
+          <StyledText className="text-white text-2xl mb-5">Expenses</StyledText>
+          <ExpensePieChart data={historyExpenses} />
+          <TwoWeekSummary data={historyExpenses} />
+        </StyledView>
+      </StyledScrollView>
+    </StyledSafeAreaView>
   );
-}
+};
+
+export default HomeScreen;
