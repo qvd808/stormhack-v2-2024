@@ -33,9 +33,9 @@ const getCategoryIcon = (category) => {
     case "dairy & eggs":
       return "egg";
     case "snacks & candy":
-      return "candy-cane";
+      return "candy-outline";
     case "baked & bakery":
-      return "bread-slice";
+      return "bread-slice-outline";
     case "frozen food":
       return "snowflake";
     case "meat":

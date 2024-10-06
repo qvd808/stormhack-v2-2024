@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
-import { Picker } from "@react-native-picker/picker";
+import GroceryItem from './GroceryItem';
 import {
   Button,
   SafeAreaView,
@@ -19,7 +19,6 @@ const StyledText = styled(Text);
 const StyledButton = styled(Button);
 const StyledTextInput = styled(TextInput);
 const StyledView = styled(View);
-const StyledPicker = styled(Picker);
 
 const imageApiKey = process.env["IMAGE_API_KEY"];
 const lmlApiKey = process.env["LLM_API_KEY"];
@@ -298,6 +297,13 @@ export default function UploadImage() {
   // Save parsed data to async storage
   const handleDone = async () => {
     try {
+      // Check if any item has category "unknown"
+    const hasUnknownCategory = tempData.some(item => item.category === 'Unknown');
+
+    if (hasUnknownCategory) {
+      Alert.alert("Validation Error", "Cannot save data with 'unknown' category.");
+      return; // Exit the function early
+    }
       const processedData = tempData.map((item) => ({
         id: "id-" + Math.random().toString(36),
         date: item.date,
@@ -318,54 +324,16 @@ export default function UploadImage() {
   };
 
  // Render the table of grocery items
-  const renderItem = ({ item, index }) => (
-    <StyledView className="bg-gray-700 rounded-xl p-4 mb-4">
-      <StyledTextInput
-        className="bg-gray-600 text-gray-100 rounded-lg p-3 mb-3 text-base"
-        placeholder="Enter name"
-        placeholderTextColor="#9CA3AF"
-        defaultValue={item.name}
-        onChangeText={(text) => {
-          const updatedData = [...tempData];
-          updatedData[index].name = text;
-          setTempData(updatedData);
-        }}
-      />
-      <StyledTextInput
-        className="bg-gray-600 text-gray-100 rounded-lg p-3 mb-3 text-base"
-        placeholder="Enter price"
-        placeholderTextColor="#9CA3AF"
-        defaultValue={item.price.toString()}
-        onChangeText={(text) => {
-          const price = parseFloat(text);
-          const updatedData = [...tempData];
-
-          if (!isNaN(price) && price > 0) {
-            updatedData[index].price = price;
-            setIsValid(true);
-          } else {
-            setIsValid(false);
-          }
-          setTempData(updatedData);
-        }}
-        keyboardType="numeric"
-      />
-      <StyledPicker
-        selectedValue={item.category}
-        className="bg-gray-600 text-gray-100 rounded-lg mb-3"
-        onValueChange={(itemValue) => {
-          const updatedData = [...tempData];
-          updatedData[index].category = itemValue;
-          setTempData(updatedData);
-        }}
-      >
-        <Picker.Item label="Select a category" value="" className="text-red-500" />
-        {validCategories.map((category, index) => (
-          <Picker.Item key={index} label={category} value={category} color="#FFFFF" />
-        ))}
-      </StyledPicker>
-    </StyledView>
-  );
+ const renderItem = ({ item, index }) => (
+  <GroceryItem
+    item={item}
+    index={index}
+    tempData={tempData}
+    setTempData={setTempData}
+    validCategories={validCategories}
+    setIsValid={setIsValid}
+  />
+);
 
   return (
     <StyledSafeAreaView className="flex-1 bg-gray-800 p-4">
