@@ -12,6 +12,7 @@
     "@expo/vector-icons": "^14.0.4",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
+    "babel-plugin-transform-inline-environment-variables": "^0.4.4",
     "expo": "~51.0.28",
     "expo-image-picker": "~15.0.7",
     "expo-status-bar": "~1.12.1",

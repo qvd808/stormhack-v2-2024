@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    ["transform-inline-environment-variables", {
+      "include": [
+        "IMAGE_API_KEY",
+        "LLM_API_KEY",
+        "API_URL",
+        "NODE_ENV"
+      ]
+    }]
+  ]
+}
