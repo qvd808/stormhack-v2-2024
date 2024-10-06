@@ -31,7 +31,7 @@ export default function App() {
             },
             tabBarActiveTintColor: '#007bff',
             tabBarInactiveTintColor: 'gray',
-            tabBarStyle: { paddingBottom: 5, paddingTop: 5 },
+            tabBarStyle: { paddingBottom: 7, paddingTop: 5, height: 65 },
           })}
         >
           <Tab.Screen name="Home" component={HomeScreen} />
