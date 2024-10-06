@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, ScrollView } from 'react-native';
 import { useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { getData } from './AsyncMethod';
@@ -24,6 +24,7 @@ export default function HomeScreen() {
   );
 
   return (
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
     <View className="flex-1 p-4">
       <Text className="text-2xl mb-5">Expenses</Text>
       <View className="w-full">
@@ -36,8 +37,10 @@ export default function HomeScreen() {
           data={historyExpenses}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          contentContainerStyle={{ flexGrow: 1 }}
         />
       </View>
     </View>
+    </ScrollView>
   );
 }
