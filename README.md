@@ -40,4 +40,4 @@ To run SmartExpense, please follow these steps:
 ```
 
 ## Credits
-- Our logo was made with the help of (DesignEvo)[www.designevo.com]
+- Our logo was made with the help of [DesignEvo](www.designevo.com)
