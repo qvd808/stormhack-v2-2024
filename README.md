@@ -37,7 +37,7 @@ To run SmartExpense, please follow these steps:
    cd mobile
    npm install
    eas build --platform android
-```
+   ```
 
 ## Credits
 - Our logo was made with the help of [DesignEvo](www.designevo.com)
